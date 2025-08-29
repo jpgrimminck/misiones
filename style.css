@@ -1,0 +1,130 @@
+/* === Reset & Variables === */
+:root{
+  /* Escala base relativa: 1080 es 100vh; mantenemos proporciones del diseño original */
+  --safe-m: clamp(16px, 4vh, 48px);
+  --gap: clamp(8px, 1.85vh, 20px);
+  --col-mision-w: clamp(220px, 25vw, 480px);
+  --col-premio-w: clamp(280px, 30vw, 600px);
+  --peek-left: clamp(24px, 1.9vw, 84px); /* ~20% relativo y con tope */
+  --row-header-h: clamp(72px, 13vh, 140px);
+  --row-footer-h: clamp(64px, 11vh, 120px);
+  --row-main-h: calc(100vh - var(--row-header-h) - var(--row-footer-h) - 2*var(--safe-m));
+  --main-pad: clamp(8px,1.5vh,16px);
+  --card-h: clamp(84px, 13vh, 140px);
+  --card-gap-v: clamp(10px, 1.85vh, 20px);
+  --bg: #0f1115;
+  --panel: #161a22;
+  --muted: #2a2f3a;
+  --muted-2: #1d2230;
+  --text: #f2f5f9;
+  --subtext: #c8cfdd;
+  --accent: #3aa0ff;
+  --good: #2db87b;
+  --warning: #f0b429;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{width:100%;height:100%;background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;}
+button{border:none;background:transparent;color:inherit}
+
+/* === Canvas 1920x1080 y Safe Area === */
+.tv-canvas{width:100vw;height:100vh;margin:0 auto;background:var(--bg);position:relative}
+.tv-safe{position:absolute;left:var(--safe-m);right:var(--safe-m);top:var(--safe-m);bottom:var(--safe-m);display:grid;grid-template-rows:var(--row-header-h) var(--row-main-h) var(--row-footer-h);gap:var(--gap)}
+
+/* === Header: Progreso + Avatar === */
+.header{display:flex;align-items:center;justify-content:space-between}
+.progress{display:flex;align-items:center;gap:16px;width:calc(100% - 260px)}
+.progress__track{position:relative;height:24px;background:var(--muted);border-radius:12px;overflow:hidden;flex:1}
+.progress__fill{position:absolute;left:0;top:0;bottom:0;background:var(--good);transition:width .35s ease, background-color 3s ease;box-shadow:0 0 14px rgba(45,184,123,.35), inset 0 0 6px rgba(255,255,255,.08)}
+.progress__ticks{position:absolute;left:0;right:0;top:0;bottom:0;pointer-events:none}
+/* Etiquetas de marcas mayores (20★,40★,60★,80★,100★) */
+.progress__tick-label{position:absolute;bottom:calc(100% + 6px);transform:translateX(-50%);color:var(--subtext);font-weight:700;font-size:clamp(10px,1.8vh,14px);line-height:1;white-space:nowrap;pointer-events:none}
+.progress__label{
+  min-width:clamp(72px,10vh,120px);
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  height:clamp(28px,5vh,40px);
+  padding:0 clamp(10px,1.2vh,14px);
+  border-radius:999px;
+  background:#263149;
+  color:#ffd166;
+  font-weight:700;
+  font-size:clamp(14px,2.2vh,20px);
+  letter-spacing:2px;
+  line-height:1;
+}
+.progress__label::after{content:"\2605"; /* ★ */ margin-left:8px; color:#ffd166; line-height:1; display:inline-block; vertical-align:middle}
+.avatar{display:flex;align-items:center;gap:12px;flex-direction:row-reverse}
+.avatar img{width:clamp(40px,5vh,56px);height:clamp(40px,5vh,56px);border-radius:50%;object-fit:cover;background:#333}
+.avatar__name{font-size:clamp(16px,2.6vh,28px);color:var(--text);text-align:right;white-space:nowrap}
+
+/* Avatar como círculo con inicial */
+.avatar__circle{width:clamp(40px,5vh,56px);height:clamp(40px,5vh,56px);border-radius:50%;background:#1b2130;color:#f2f5f9;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:clamp(18px,3vh,28px);box-shadow:0 2px 8px rgba(0,0,0,.35)}
+
+/* === Main / Carrusel === */
+.main{background:var(--panel);border-radius:16px;padding:var(--main-pad)}
+.carousel{width:100%;height:100%}
+.carousel__viewport{position:relative;width:100%;height:100%;overflow:hidden;border-radius:12px}
+.carousel__track{position:absolute;top:0;left:0;height:100%;display:flex;align-items:stretch;gap:var(--gap);transition:transform .45s cubic-bezier(.25,.8,.25,1)}
+
+/* Columnas */
+.col{height:100%;background:var(--muted-2);border-radius:12px;box-shadow:0 4px 16px rgba(0,0,0,.3);padding:16px}
+.col--mission{width:var(--col-mision-w);display:grid;grid-template-rows:repeat(5, 1fr);row-gap:var(--card-gap-v)}
+.col--reward{width:var(--col-premio-w);display:flex;flex-direction:column}
+
+/* Tarjetas de misión */
+.m-card{min-height:clamp(72px, calc((var(--row-main-h) - 2*var(--main-pad) - 2*16px - 4*var(--card-gap-v)) / 5), var(--card-h));display:grid;grid-template-columns:clamp(52px,6.2vh,72px) 1fr clamp(56px,6vh,76px);column-gap:clamp(6px,0.9vh,8px);align-items:center;background:#1b2130;border:2px solid transparent;border-radius:12px;padding:clamp(8px,1.2vh,12px);position:relative;overflow:hidden}
+/* Capa de relleno animada para misiones completadas */
+.m-card::before{content:"";position:absolute;left:0;top:0;bottom:0;width:100%;background:linear-gradient(90deg,#163224 0%, #1d6f4a 100%);transform:scaleX(var(--fill, 0));transform-origin:left center;transition:transform 1.2s ease-out;z-index:0}
+/* Asegurar que el contenido quede sobre la capa de relleno */
+.m-card > *{position:relative;z-index:1}
+/* Estado completado: capa de relleno expandida */
+/* El relleno ahora se controla por variable --fill (0..1) */
+.m-card__num{width:clamp(34px,4.4vh,46px);height:clamp(34px,4.4vh,46px);border-radius:50%;display:flex;align-items:center;justify-content:center;background:#0e1320;color:#fff;font-weight:700;font-size:clamp(13px,2vh,19px)}
+  .m-card__title{font-size:clamp(15px,2.4vh,17px);line-height:1.15;color:var(--text);padding:0;margin-left: -15px;margin-right: 10px;}
+.m-card__stars{justify-self:end;min-width:clamp(64px,8vh,92px);height:clamp(28px,5vh,40px);border-radius:999px;display:flex;align-items:center;justify-content:center;background:#263149;color:#ffd166;font-weight:700;font-size:clamp(14px,2.2vh,20px);letter-spacing:2px}
+
+/* Estados */
+.m-card--selected{border-color:#2b8b60;box-shadow:0 0 0 3px rgba(43,139,96,.25) inset}
+.m-card--done{border-color:#2b8b60}
+.m-card--done .m-card__stars{background:#1d6f4a;color:#d6ffe9}
+.m-card--locked{background:#141927;border-color:#20263a}
+.m-card--locked .m-card__stars{background:#2a334a;color:#8892a7}
+.m-card--locked .m-card__lock{margin-left:6px;color:#8892a7}
+.m-card--locked{cursor:default}
+
+/* Columna de premio */
+.reward{display:flex;flex-direction:column;height:100%}
+.reward__image{flex:0 0 77%;border-radius:10px;overflow:hidden;background:#0e1320;display:flex;align-items:center;justify-content:center;position:relative}
+.reward__image img{width:100%;height:100%;object-fit:cover}
+.reward__body{flex:1;display:flex;flex-direction:column;gap:clamp(8px,1.2vh,12px);padding:clamp(10px,1.4vh,16px)}
+.reward__header{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.reward__title{font-size:clamp(20px,3.6vh,36px);font-weight:800;line-height:1}
+.reward__stars{font-size:clamp(16px,2.6vh,28px);color:#ffd166;font-weight:700;font-variant-numeric:tabular-nums;display:inline-flex;align-items:center;line-height:1}
+.reward__stars.is-complete{color:var(--good)}
+.reward__stars::after{content:"\2605"; /* ★ */ margin-left:8px; color:#ffd166; line-height:1; display:inline-block; vertical-align:middle}
+.reward__cond{font-size:clamp(14px,2.6vh,26px);color:var(--subtext)}
+
+/* Estado de premio bloqueado: desenfoque ~70% y candado centrado */
+.reward--locked .reward__image img{filter:grayscale(1) blur(3px) brightness(0.7); transform:scale(1.05)}
+.reward__lock{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;z-index:2;pointer-events:none}
+.reward__lock::before{content:"🔒";font-size:clamp(28px,6vh,60px);text-shadow:0 2px 8px rgba(0,0,0,.6)}
+
+/* Desbloqueo: revelar desde el centro hacia afuera */
+@keyframes radial-reveal{
+  from{clip-path:circle(0% at 50% 50%)}
+  to{clip-path:circle(150% at 50% 50%)}
+}
+.reward--reveal .reward__image img{
+  /* Inicia oculto en el centro y se revela hacia afuera */
+  clip-path:circle(0% at 50% 50%);
+  animation:radial-reveal 700ms ease-out forwards;
+}
+
+/* Flechas */
+.footer{display:flex;align-items:center;justify-content:center;gap:48px}
+.arrow{width:clamp(56px,8vh,88px);height:clamp(56px,8vh,88px);border-radius:50%;background:#1b2232;color:#cfe3ff;display:flex;align-items:center;justify-content:center;box-shadow:0 6px 18px rgba(0,0,0,.35)}
+.arrow:hover{background:#22314a}
+.arrow:active{transform:scale(.98)}
+
+/* Helper: Peek izquierdo visual (no elemento extra; se logra con transform y viewport) */

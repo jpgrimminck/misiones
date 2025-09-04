@@ -16,6 +16,8 @@ const avatarImg = document.getElementById('avatarImg');
 const avatarNameEl = document.querySelector('.avatar__name');
 let avatarInitialEl = null;
 let currentUserName = 'Mateo';
+// DB alumno usado para escribir en la tabla `missions` (inicializado en init desde usuarios.json)
+let DB_ALUMNO = null;
 // Supabase client (read-only for mission titles)
 const supabase = (window.supabase && window.SUPABASE_URL)
   ? window.supabase.createClient(window.SUPABASE_URL, window.SUPABASE_ANON_KEY)
@@ -57,6 +59,56 @@ function calcStars(num){
   if (pos <= 3) return 1;
   if (pos <= 7) return 2;
   return 3;
+}
+// === Persistencia de progreso en la tabla `missions` ===
+// Lee las columnas de progreso (estrellas/estado) y rellena `acquired` y `visibleCompleted`.
+async function loadMissionProgressFromDB(alumno){
+  if(!supabase) return;
+  try{
+    // Intentamos columnas en inglés (number) y en español (numero)
+    let { data, error } = await supabase.from('missions').select('number,estrellas,estado').limit(1000);
+    if(error || !data || data.length===0){
+      ({ data, error } = await supabase.from('missions').select('numero,estrellas,estado').limit(1000));
+    }
+    if(error || !data) return;
+    data.forEach(row=>{
+      const n = (row.number ?? row.numero);
+      const s = (typeof row.estrellas === 'number') ? row.estrellas : 0;
+      if(typeof n === 'number'){
+        acquired.set(n, s);
+        const req = calcStars(n);
+        if(s >= req){ visibleCompleted.add(n); }
+      }
+    });
+    calcProgress();
+    render();
+  }catch(e){ console.warn('loadMissionProgressFromDB error', e); }
+}
+
+// Actualiza las columnas `estrellas` y `estado` en la tabla `missions` para la fila indicada.
+// Hacemos una actualización optimista en la UI; esta función intenta update por `number` o `numero`.
+async function upsertMissionProgress(alumno, missionNumber, stars){
+  if(!supabase) return;
+  const required = calcStars(missionNumber);
+  const completed = stars >= required;
+  // Intentar update por columna `number`
+  try{
+    let { data, error } = await supabase.from('missions').update({ estrellas: stars, estado: completed, alumno }).eq('number', missionNumber).select();
+    if(error) {
+      // intentar por `numero`
+      ({ data, error } = await supabase.from('missions').update({ estrellas: stars, estado: completed, alumno }).eq('numero', missionNumber).select());
+    }
+    // Si no existe row (data length 0) intentamos insertar como fallback
+    if(!error && data && data.length===0){
+      // Intentar insert sencillo (puede fallar si otras columnas son NOT NULL)
+      await supabase.from('missions').insert({ number: missionNumber, estrellas: stars, estado: completed, alumno }).select();
+    }
+    if(error) throw error;
+    return true;
+  }catch(err){
+    console.error('upsertMissionProgress error', err);
+    throw err;
+  }
 }
 function highestCompletedBlock(){
   // Devuelve el índice del bloque más alto completamente completado (0..4), o -1 si ninguno
@@ -215,6 +267,10 @@ function render(){
           const fromFill = maxS > 0 ? (prev / maxS) : 0;
           const toFill = maxS > 0 ? (next / maxS) : 0;
           acquired.set(n, next);
+          // Persistir cambio optimista en la tabla `missions`
+          if(supabase){
+            upsertMissionProgress(DB_ALUMNO, n, next).catch(err=>{ console.error('Error guardando progreso en DB', err); });
+          }
           // Guardar animación para aplicar post-render y re-renderizar
           fillAnim = { n, from: fromFill, to: toFill };
           render();
@@ -249,6 +305,7 @@ function render(){
     } else {
       const idx = col.index; // 0..4
       const reward = rewards[idx] || {titulo:'Premio', condicion:'', premio: idx+1, id: 'default'};
+  console.log('[DEBUG] rendering reward', idx, reward && reward.titulo);
   const c = document.createElement('div');
       c.className = 'col col--reward';
       const wrap = document.createElement('div');
@@ -256,17 +313,20 @@ function render(){
       // Premio por bloque: contador 0/20 del bloque correspondiente.
       // Solo cuenta cuando el bloque está habilitado; se desbloquea al llegar a 20/20 de su bloque.
       const start = idx * 10 + 1;
-      const end = idx * 10 + 10;
-      const activeIdx = Math.min(highestCompletedBlock() + 1, 4); // bloque actualmente habilitado (0..4)
-      const blockActive = idx <= activeIdx;
-      let blockStars = 0;
-      if (blockActive) {
-        for (let n = start; n <= end; n++) {
-          if (visibleCompleted.has(n)) blockStars += calcStars(n); // solo misiones visibles (tras 1.5s) cuentan
-        }
-      }
-  const threshold = 20;
-  const blockComplete = blockActive && blockStars >= threshold;
+          const end = idx * 10 + 10;
+          const activeIdx = Math.min(highestCompletedBlock() + 1, 4); // bloque actualmente habilitado (0..4)
+          const blockActive = idx <= activeIdx;
+          let blockStars = 0;
+          if (blockActive) {
+            // Contamos estrellas acumuladas desde la misión 1 hasta el final de este bloque
+            for (let n = 1; n <= end; n++) {
+              if (visibleCompleted.has(n)) blockStars += calcStars(n);
+            }
+          }
+      // Umbrales crecientes por premio: 20,40,60,80,100
+      const thresholds = [20,40,60,80,100];
+      const threshold = thresholds[idx] || 20;
+      const blockComplete = blockActive && blockStars >= threshold;
   // Desbloqueo visual: solo cuando el conteo mostrado llegó a 20 y pasó 1s
   const wasUnlocked = rewardUnlockedPrev[idx] === true;
   const nowUnlocked = blockComplete && (rewardRevealDone[idx] === true);
@@ -450,7 +510,7 @@ function rewardImageUrlFor(userId, n){
   const safeId = encodeURIComponent(userId || 'default');
   const safeN = String(n).replace(/[^0-9]/g, '');
   // Ruta local: ./premios/<ID>/<n>.jpeg
-  return `./premios/${safeId}/${safeN}.jpeg`;
+  return `../premios/${safeId}/${safeN}.jpeg`;
 }
 
 // === Navegación ===
@@ -483,8 +543,8 @@ async function safeLoad(path){
 async function init(){
   buildTicks();
   try{
-    const uData = await safeLoad('./usuarios.json');
-    const pData = await safeLoad('./premios.json');
+  const uData = await safeLoad('../usuarios.json');
+  const pData = await safeLoad('../premios/premios.json');
     // Misiones desde Supabase (independiente de JSON locales)
     let missionsDB = null;
     if (supabase) {
@@ -525,8 +585,10 @@ async function init(){
         });
       }
     }
-    currentUserName = (uData && (uData.nombre || uData.id)) || 'Mateo';
-    if(avatarNameEl){ avatarNameEl.textContent = currentUserName; }
+  currentUserName = (uData && (uData.nombre || uData.id)) || 'Mateo';
+  // Usar el usuario leído desde usuarios.json como alumno de DB
+  DB_ALUMNO = currentUserName;
+  if(avatarNameEl){ avatarNameEl.textContent = currentUserName; }
     // Crear avatar por inicial
     const initial = (currentUserName || 'M').charAt(0).toUpperCase();
     const avatarContainer = document.querySelector('.avatar');
@@ -546,7 +608,23 @@ async function init(){
       // Fallback: no usar misiones.json para títulos; placeholder "Misión n"
       missions = Array.from({length:50}, (_,i)=>({numero:i+1, titulo:'Misión '+(i+1)}));
     }
-  rewards = (pData && pData.premios) ? pData.premios : [1,2,3,4,5].map(n=>({id:'Mateo', premio:n, titulo:'Premio '+n, condicion:''}));
+    // Procesar datos de premios de forma defensiva: puede venir como {premios: [...]} o como array en raíz
+    let parsedRewards = null;
+    if (pData) {
+      if (Array.isArray(pData.premios)) parsedRewards = pData.premios;
+      else if (Array.isArray(pData)) parsedRewards = pData;
+    }
+    if (parsedRewards && parsedRewards.length>0) {
+      rewards = parsedRewards;
+    } else {
+      rewards = [1,2,3,4,5].map(n=>({id:'Mateo', premio:n, titulo:'Premio '+n, condicion:''}));
+    }
+    console.log('[DEBUG] premios raw:', pData);
+    console.log('[DEBUG] rewards used:', rewards);
+      // Cargar progreso desde la tabla `missions` (si existen columnas estrellas/estado)
+      if (supabase) {
+        try { await loadMissionProgressFromDB(DB_ALUMNO); } catch(e){ console.warn('No se pudo cargar progreso desde DB', e); }
+      }
     // Realtime: reflejar cambios de títulos
   if (supabase) {
       supabase
@@ -556,16 +634,62 @@ async function init(){
           if(!row) return;
           const num = (row.number ?? row.numero);
           const title = (row.title ?? row.titulo);
+          const estrellas = (typeof row.estrellas === 'number') ? row.estrellas : undefined;
+          const estado = (typeof row.estado === 'boolean') ? row.estado : undefined;
           const i = missions.findIndex(m=>m.numero===num);
           if (payload.eventType === 'DELETE') {
             if (i>=0) missions.splice(i,1);
+            // remove any local progress
+            acquired.delete(num);
+            visibleCompleted.delete(num);
           } else {
-            if (i>=0) missions[i].titulo = title;
-            else { missions.push({ numero: num, titulo: title }); missions.sort((a,b)=>a.numero-b.numero); }
+            if (i>=0) {
+              // update title if present
+              if (typeof title !== 'undefined') missions[i].titulo = title;
+            } else if (typeof num === 'number') {
+              missions.push({ numero: num, titulo: title || `Misión ${num}` });
+              missions.sort((a,b)=>a.numero-b.numero);
+            }
+            // Update progress map if estrellas present
+            if (typeof estrellas === 'number'){
+              acquired.set(num, estrellas);
+              const req = calcStars(num);
+              if (estrellas >= req) visibleCompleted.add(num);
+              else visibleCompleted.delete(num);
+            }
+            // If estado provided but not estrellas, use estado to toggle visibleCompleted
+            else if (typeof estado === 'boolean'){
+              if (estado) visibleCompleted.add(num);
+              else visibleCompleted.delete(num);
+            }
           }
+          // Recalculate progress and re-render
+          calcProgress();
           render();
         })
         .subscribe();
+    }
+    // Subscribe to user_meta for selection changes (so TV highlights selected mission)
+    if (supabase) {
+      try{
+        supabase
+          .channel('rt-user-meta-tv')
+          .on('postgres_changes', { event: '*', schema: 'public', table: 'user_meta' }, (payload)=>{
+            const row = payload.new || payload.old;
+            if(!row) return;
+            const alumnoRow = row.alumno;
+            // Only react to the current DB_ALUMNO if defined
+            if(DB_ALUMNO && alumnoRow !== DB_ALUMNO) return;
+            const sel = row.selected_mission;
+            if(typeof sel === 'number'){
+              selectedMission = sel;
+            } else {
+              selectedMission = null;
+            }
+            render();
+          })
+          .subscribe();
+      }catch(e){ console.warn('user_meta realtime (TV) failed', e); }
     }
   }catch(err){
     console.error(err);

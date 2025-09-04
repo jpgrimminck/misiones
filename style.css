@@ -85,7 +85,14 @@ button{border:none;background:transparent;color:inherit}
 .m-card__stars{justify-self:end;min-width:clamp(64px,8vh,92px);height:clamp(28px,5vh,40px);border-radius:999px;display:flex;align-items:center;justify-content:center;background:#263149;color:#ffd166;font-weight:700;font-size:clamp(14px,2.2vh,20px);letter-spacing:2px}
 
 /* Estados */
-.m-card--selected{border-color:#2b8b60;box-shadow:0 0 0 3px rgba(43,139,96,.25) inset}
+.m-card--selected{
+  /* Highlight without layout shift: use outer box-shadow (no border-width change), full-opacity star color, and render above siblings */
+  border-color: #ffd166; /* same color as stars */
+  box-shadow: 0 0 0 4px rgba(255,209,102,1), 0 14px 36px rgba(255,209,102,0.12);
+  z-index: 9999; /* ensure highlight paints above everything */
+  position: relative; /* ensure z-index applies */
+  opacity: 1; /* full opacity */
+}
 .m-card--done{border-color:#2b8b60}
 .m-card--done .m-card__stars{background:#1d6f4a;color:#d6ffe9}
 .m-card--locked{background:#141927;border-color:#20263a}

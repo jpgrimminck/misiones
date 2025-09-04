@@ -1,0 +1,86 @@
+:root{
+  --bg: #0b0f17;
+  --card: #141a26;
+  --text: #e9eef7;
+  --muted: #a9b3c7;
+  --accent: #30d158;
+  --accent-2: #5ac8fa;
+  --sep: #223048;
+}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{
+  margin:0; background:var(--bg); color:var(--text);
+  font-family: system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, Noto Sans, "Helvetica Neue", Arial, "Apple Color Emoji", "Segoe UI Emoji";
+}
+a{color:inherit}
+
+/* Header/Footer fixed */
+.header,.footer{position:fixed; left:0; right:0; z-index:10;}
+.header{top:0; display:flex; align-items:center; justify-content:space-between; padding:10px 12px; background:linear-gradient(180deg, rgba(11,15,23,0.95), rgba(11,15,23,0.6)); backdrop-filter: blur(6px);}
+.footer{bottom:0; display:flex; gap:8px; padding:10px; background:linear-gradient(0deg, rgba(11,15,23,0.95), rgba(11,15,23,0.6)); backdrop-filter: blur(6px);}
+
+.stars-badge{font-weight:700; font-size:18px; padding:6px 10px; background:var(--card); border:1px solid var(--sep); border-radius:999px;}
+.user-badge{display:flex; align-items:center; gap:8px;}
+.user-badge__circle{width:28px; height:28px; border-radius:50%; background:#2a3346; display:flex; align-items:center; justify-content:center; font-weight:700;}
+.user-badge__circle--lg{width:38px; height:38px;}
+.user-badge__name{font-weight:600}
+
+/* Main scroll (detrás) */
+.main{position:relative; z-index:0; padding:64px 12px 76px; min-height:100vh;}
+.separator{height:10px; background:var(--sep); opacity:0.4; border-radius:6px; margin:10px 0 6px;}
+
+/* Objective card */
+.objective-card{display:flex; gap:12px; background:var(--card); border:1px solid var(--sep); border-radius:12px; padding:12px;}
+.objective-card__title{font-weight:700; margin-bottom:4px}
+.objective-card__text{color:var(--muted); white-space:pre-wrap}
+
+/* Missions list */
+.missions-list{display:flex; flex-direction:column; gap:10px;}
+.mission-card{display:grid; grid-template-columns:86px 1fr; gap:8px; background:var(--card); border:1px solid var(--sep); border-radius:12px; padding:10px;}
+.mission-card__left{display:flex; flex-direction:column; justify-content:space-between}
+.mission-card__num{font-weight:700; opacity:0.9}
+.mission-card__stars{align-self:flex-start; font-weight:700; color:#ffd54a !important; opacity:1 !important; visibility:visible !important; display:inline-block !important}
+.mission-card__star{display:inline-block; margin-right:4px; font-size:16px; line-height:1}
+.mission-card__star.star--empty{color:rgba(255,213,74,0.25)}
+.mission-card__star.star--filled{color:#ffd54a}
+.mission-card__body{display:flex; align-items:flex-start}
+.mission-card__title{font-weight:600}
+.mission-card.is-selected{
+  /* Match TV selection: star color (#ffd166), full opacity, no layout shift */
+  outline: none;
+  border-color: #ffd166; /* keep border width to avoid shifting layout */
+  box-shadow: 0 0 0 4px rgba(255,209,102,1), 0 10px 28px rgba(255,209,102,0.08);
+  position: relative;
+  z-index: 9999;
+}
+
+/* Completed missions: green like TV */
+.mission-card--done{background:linear-gradient(180deg,#094216,#2c6137); border-color:rgba(8,80,28,0.6); color:#e7f9ea}
+.mission-card--done .mission-card__stars{color:#fff3b0 !important}
+.mission-card--done .mission-card__title{color:#e7f9ea}
+
+/* Reward card (similar a TV) */
+.reward-card{display:flex; flex-direction:column; gap:8px; background:var(--card); border:1px solid var(--sep); border-radius:12px; padding:10px; overflow:hidden}
+.reward-card__img{width:100%; aspect-ratio:16/9; object-fit:cover; border-radius:8px}
+.reward-card__header{display:flex; align-items:center; justify-content:space-between}
+.reward-card__title{font-weight:700}
+.reward-card__stars{font-weight:700}
+.reward-card__cond{color:var(--muted)}
+
+/* Footer buttons */
+.btn{flex:1; min-height:44px; border-radius:10px; border:1px solid var(--sep); background:#1a2232; color:var(--text); font-weight:600}
+.btn--primary{background:#203048; border-color:#2a3a54}
+.btn:active{transform:translateY(1px)}
+
+.visually-hidden{position:absolute!important; width:1px; height:1px; margin:-1px; padding:0; border:0; clip:rect(0 0 0 0); overflow:hidden}
+
+/* Edit modal */
+.edit-modal{position:fixed;inset:0;display:none;align-items:center;justify-content:center;z-index:10000}
+.edit-modal[aria-hidden="false"]{display:flex}
+.edit-modal__backdrop{position:absolute;inset:0;background:rgba(4,8,12,0.6)}
+.edit-modal__panel{position:relative;z-index:2;background:var(--card);border:1px solid var(--sep);border-radius:12px;padding:14px;max-width:720px;width:92%;box-shadow:0 12px 40px rgba(0,0,0,0.6);display:flex;flex-direction:column;gap:10px}
+.edit-modal__input{width:100%;min-height:88px;border-radius:8px;padding:10px;border:1px solid var(--sep);background:#0b1018;color:var(--text);font-size:16px}
+.edit-modal__actions{display:flex;gap:10px;align-items:center;justify-content:space-between}
+.edit-modal__actions .btn{flex:0 0 auto}
+.edit-modal__actions .btn--primary{background:#2ea84f;color:#fff;padding:12px 18px;font-weight:800}

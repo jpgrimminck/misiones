@@ -1,9 +1,0 @@
-{
-  "premios": [
-    { "id": "Mateo", "premio": 1, "titulo": "Ping Pong Familiar", "condicion": "Deben jugar al menos papá y mamá en algún momento" },
-    { "id": "Mateo", "premio": 2, "titulo": "Película Pow Patrol", "condicion": "Deben verla en la pieza con cabritas dulces" },
-    { "id": "Mateo", "premio": 3, "titulo": "Metrónomo Pro", "condicion": "Practicar 3 ritmos nuevos usando el metrónomo" },
-    { "id": "Mateo", "premio": 4, "titulo": "Lección privada", "condicion": "Tomar una mini clase 1:1 de 20 minutos" },
-    { "id": "Mateo", "premio": 5, "titulo": "Concierto familiar", "condicion": "Tocar y cantar 2 canciones frente a la familia" }
-  ]
-}

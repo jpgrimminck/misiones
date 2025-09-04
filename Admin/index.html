@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Admin Misiones</title>
+  <link rel="stylesheet" href="./style.css" />
+</head>
+<body>
+  <!-- Fila 1: Header fijo (total estrellas + usuario) -->
+  <header id="adminHeader" class="header">
+    <div class="header__left">
+      <div id="totalStars" class="stars-badge">0★</div>
+    </div>
+    <div class="header__right">
+      <div id="userBadge" class="user-badge">
+        <div class="user-badge__circle" id="userCircle">?</div>
+        <div class="user-badge__name" id="userName">Usuario</div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Fila 2: Main scrollable por detrás de header/footer -->
+  <main id="adminMain" class="main" aria-live="polite">
+    <section id="objectiveCard" class="objective-card" tabindex="0" data-type="objective">
+      <div class="objective-card__left">
+        <div class="user-badge__circle user-badge__circle--lg" id="objUserCircle">?</div>
+      </div>
+      <div class="objective-card__body">
+        <div class="objective-card__title">Objetivo</div>
+        <div class="objective-card__text" id="objectiveText">(sin objetivo)</div>
+      </div>
+    </section>
+    <div class="separator" role="separator" aria-hidden="true"></div>
+    <section id="missionsList" class="missions-list"></section>
+  </main>
+
+  <!-- Fila 3: Footer fijo (botones) -->
+  <footer id="adminFooter" class="footer">
+    <button id="btnEdit" class="btn btn--primary">Editar</button>
+    <button id="btnDec" class="btn">Quitar ★</button>
+    <button id="btnInc" class="btn">Agregar ★</button>
+  </footer>
+
+  <!-- Edit modal (floating) -->
+  <div id="editModal" class="edit-modal" aria-hidden="true">
+    <div class="edit-modal__backdrop" data-close="true"></div>
+    <div class="edit-modal__panel" role="dialog" aria-modal="true" aria-label="Editar misión">
+      <textarea id="editModalInput" class="edit-modal__input" rows="3" aria-label="Texto de misión"></textarea>
+      <div class="edit-modal__actions">
+        <button id="btnBack" class="btn">Volver</button>
+        <button id="btnChange" class="btn btn--primary">Cambiar</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="../config.js"></script>
+  <script src="./script.js"></script>
+  
+</body>
+</html>
